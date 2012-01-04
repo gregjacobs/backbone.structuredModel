@@ -112,18 +112,33 @@
 	 * defines the behaviors of a Model's fields. 
 	 * 
 	 * @constructor
-	 * @param {String} name The name of the Field (attribute).
+	 * @param {String} config The field object's config, which is its definition. Can also be its field name provided directly as a string.
 	 */
-	Backbone.Field = function( name ) {
-		// Each Field must have a name.
-		if( name === undefined || name === null || name === "" ) {
-			throw new Error( "no 'name' property provided to Backbone.Field" );
+	Backbone.Field = function( config ) {
+		// If the argument wasn't an object, it must be its field name
+		if( typeof config !== 'object' ) {
+			config = { name: config };
 		}
 		
-		this.name = name;
+		// Copy members of the field definition (config) provided onto this object
+		for( var prop in config ) {
+			this[ prop ] = config[ prop ];
+		}
+		
+		// Each Field must have a name.
+		var name = this.name;
+		if( name === undefined || name === null || name === "" ) {
+			throw new Error( "no 'name' property provided to Backbone.Model Field" );
+		}
 	};
 	
 	_.extend( Backbone.Field.prototype, {
+		
+		/**
+		 * @cfg {String} name (required)
+		 * The name for the field, which is used by the owner Model to reference it.
+		 */
+		name : "",
 		
 		/**
 		 * Retrieves the name of the field.
