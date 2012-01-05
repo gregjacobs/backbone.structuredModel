@@ -29,7 +29,8 @@
 		
 		/**
 		 * Initializes the Model's fields by walking up the prototype chain from the current Model subclass
-		 * up to this (the base) class, collecting their fields and combining them into one single fields hash.
+		 * up to this (the base) class, collecting their 'addFields' properties, and combining them into one single
+		 * 'fields' hash.
 		 * 
 		 * @private
 		 * @method initFields
@@ -41,18 +42,14 @@
 			var fieldsObjects = [],
 			    currentConstructor = this.constructor,
 			    currentProto = currentConstructor.prototype,
-			    propsToTest = [ 'fields', 'addFields' ], 
 			    i, len;
 			
-			// Walk up the prototype chain from the current object, collecting 'fields' or 'addFields' arrays as we go along
+			// Walk up the prototype chain from the current object, collecting 'addFields' arrays as we go along
 			do {
-				for( i = 0, len = propsToTest.length; i < len; i++ ) {
-					var prop = propsToTest[ i ];
-					if( currentProto.hasOwnProperty( prop ) && _.isArray( currentProto[ prop ] ) ) {    // skip over any prototype that doesn't define 'fields' or 'addFields' itself
-						fieldsObjects = fieldsObjects.concat( currentProto[ prop ] );
-					}
+				if( currentProto.hasOwnProperty( 'addFields' ) && _.isArray( currentProto.addFields ) ) {    // skip over any prototype that doesn't define 'addFields' itself
+					fieldsObjects = fieldsObjects.concat( currentProto.addFields );
 				}
-			} while( ( currentConstructor = ( currentProto = currentConstructor.__super__ ) && currentProto.constructor ) );  // extra parens to get jslint to stop complaining
+			} while( ( currentConstructor = ( currentProto = currentConstructor.__super__ ) && currentProto.constructor ) );  // extra parens to get jslint to stop complaining about an assignment in the test expression
 			
 			// After we have the array of fields, go backwards through them, which allows fields from subclasses to override those in superclasses
 			for( i = fieldsObjects.length; i--; ) {
@@ -60,7 +57,7 @@
 				this.fields[ field.getName() ] = field;
 			}
 		},
-	
+				
 		
 		/**
 		 * Overridden set() method, to check the presence of the Fields (attribute names) before allowing a set.
@@ -93,7 +90,26 @@
 			
 			// No error, call original get method
 			return origGetMethod.apply( this, arguments );
+		},
+		
+		
+		/**
+		 * Overridden has() method, which redefines it to determine if the Model has a Field. 
+		 * 
+		 * The original implementation is fairly useless; if the field exists, we can always retrieve the value 
+		 * and test to see if it is undefined or null (or whatever else we want to test it against, such as for any
+		 * falsy value). Testing for both undefined and null in the original implementation makes little sense anyway, 
+		 * as a Model can have an attribute that references another object, but just happens to be null at the time.
+		 * This in no way, shape, or form, constitutes the model "not having" an attribute. 
+		 * 
+		 * @method has
+		 * @param {String} fieldName
+		 * @return {Boolean}
+		 */
+		has : function( fieldName ) {
+			return !!this.fields[ fieldName ];
 		}
+		
 	} );
 		
 	
