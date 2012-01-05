@@ -1,14 +1,7 @@
 /*global _, Backbone */
 /*jslint forin:true */
 (function() {
-	
-	// Utility function to determine if a value is an array
-	var toString = Object.prototype.toString;
-	function isArray( v ) {
-		return !!v && toString.apply( v ) === '[object Array]';
-	}
-	
-	
+		
 	var OrigModel = Backbone.Model,
 	    origSetMethod = Backbone.Model.prototype.set,
 	    origGetMethod = Backbone.Model.prototype.get;
@@ -55,11 +48,11 @@
 			do {
 				for( i = 0, len = propsToTest.length; i < len; i++ ) {
 					var prop = propsToTest[ i ];
-					if( currentProto.hasOwnProperty( prop ) && isArray( currentProto[ prop ] ) ) {    // skip over any prototype that doesn't define 'fields' or 'addFields' itself
+					if( currentProto.hasOwnProperty( prop ) && _.isArray( currentProto[ prop ] ) ) {    // skip over any prototype that doesn't define 'fields' or 'addFields' itself
 						fieldsObjects = fieldsObjects.concat( currentProto[ prop ] );
 					}
 				}
-			} while( ( currentConstructor = ( currentProto = currentConstructor.superclass ) && currentProto.constructor ) );  // extra parens to get jslint to stop complaining
+			} while( ( currentConstructor = ( currentProto = currentConstructor.__super__ ) && currentProto.constructor ) );  // extra parens to get jslint to stop complaining
 			
 			// After we have the array of fields, go backwards through them, which allows fields from subclasses to override those in superclasses
 			for( i = fieldsObjects.length; i--; ) {
