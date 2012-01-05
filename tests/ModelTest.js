@@ -198,7 +198,7 @@ jQuery( document ).ready( function() {
 		} );
 		
 		var model = new Model();
-		strictEqual( model.get( 'field1' ), window.undefined, "Should have returned undefined for an existent, but unset field." );
+		strictEqual( model.get( 'field1' ), undefined, "Should have returned undefined for an existent, but unset field." );
 		
 		model.set( { field1: 'value1' } );
 		strictEqual( model.get( 'field1' ), 'value1', "Should have returned the value of the field." );
