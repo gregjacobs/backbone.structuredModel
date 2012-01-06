@@ -53,11 +53,34 @@
 			
 			// After we have the array of fields, go backwards through them, which allows fields from subclasses to override those in superclasses
 			for( i = fieldsObjects.length; i--; ) {
-				var field = new Backbone.Field( fieldsObjects[ i ] );
+				var fieldObj = fieldsObjects[ i ];
+				
+				// Normalize to a Backbone.Field configuration object if it is a string
+				if( typeof fieldObj === 'string' ) {
+					fieldObj = { name: fieldObj };
+				}
+				fieldObj.model = this;  // attach the model property
+				
+				var field = this.createField( fieldObj );
 				this.fields[ field.getName() ] = field;
 			}
 		},
-				
+		
+		
+		/**
+		 * Factory method which by default creates a {@link Backbone.Field}, but may be overridden by subclasses
+		 * to create different {@link Backbone.Field} subclasses. 
+		 * 
+		 * @protected
+		 * @method createField
+		 * @param {Object} fieldObj The field object provided on the prototype. If it was a string, it will have been
+		 *   normalized to the object `{ name: fieldName }`.
+		 * @return {Backbone.Field}
+		 */
+		createField : function( fieldObj ) {
+			return new Backbone.Field( fieldObj );
+		},
+		
 		
 		/**
 		 * Overridden set() method, to check the presence of the Fields (attribute names) before allowing a set.
@@ -121,33 +144,57 @@
 	 * defines the behaviors of a Model's fields. 
 	 * 
 	 * @constructor
-	 * @param {String} config The field object's config, which is its definition. Can also be its field name provided directly as a string.
+	 * @param {Object} config An object (hash) with the field object's configuration options, which is its definition. See the
+	 *   configs in the prototype.
 	 */
-	Backbone.Field = function( config ) {
-		// If the argument wasn't an object, it must be its field name
-		if( typeof config !== 'object' ) {
-			config = { name: config };
-		}
-		
+	Backbone.Field = function( config ) {		
 		// Copy members of the field definition (config) provided onto this object
 		for( var prop in config ) {
 			this[ prop ] = config[ prop ];
 		}
 		
+		var model = this.model,
+		    name = this.name;
+		
 		// Each Field must have a name.
-		var name = this.name;
 		if( name === undefined || name === null || name === "" ) {
 			throw new Error( "no 'name' property provided to Backbone.Model Field" );
+		}
+		
+		// Apply the default value if there is one
+		if( 'defaultValue' in this ) {
+			if( !model.hasOwnProperty( 'defaults' ) ) {
+				// If `defaults` doesn't exist yet on the object itself, create that now. We don't want to
+				// modify the prototype object.
+				model.defaults = _.extend( {}, model.defaults );  // copy properties from the prototype `defaults`
+			}
+			model.defaults[ name ] = this.defaultValue;
 		}
 	};
 	
 	_.extend( Backbone.Field.prototype, {
 		
 		/**
+		 * @hide
+		 * @cfg {Backbone.Model} model (required)
+		 * A reference back to the Model creating the Field. This is automatically added
+		 * by {@link Backbone.Model#initFields}.
+		 */
+		
+		/**
 		 * @cfg {String} name (required)
 		 * The name for the field, which is used by the owner Model to reference it.
 		 */
 		name : "",
+		
+		/**
+		 * @cfg {Mixed} defaultValue
+		 * Any default value that the Field (attribute) should have. This is so that default values
+		 * can be added inline with Field definitions, and not in a separate `defaults` property. 
+		 * 
+		 * It also allows for subclasses to define defaults for their fields, which the regular 
+		 * Backbone.Model `defaults` property does not allow.
+		 */
 		
 		/**
 		 * Retrieves the name of the field.

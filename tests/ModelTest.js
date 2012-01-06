@@ -1,4 +1,4 @@
-/*global window, jQuery, $, module, test, strictEqual, raises, Backbone */
+/*global window, jQuery, module, test, strictEqual, raises, Backbone */
 jQuery( document ).ready( function() {
 	
 	module( "Backbone.Model w/ Structured Fields" );
